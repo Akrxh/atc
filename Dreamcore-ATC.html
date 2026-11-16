@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#070707">
+<title>DREAMCORE / ATC</title>
+<style>
+:root{color-scheme:dark;--bg:#070707;--fg:#f1f0eb;--muted:#92928d;--line:#34342f;--yellow:#f0d84a;--red:#cf7777;--green:#8fc4a0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.6 Inter,system-ui,Arial,sans-serif}
+button,input,textarea{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--yellow);outline-offset:3px}
+.hidden{display:none!important}.shell{width:min(880px,calc(100% - 36px));margin:auto;padding:25px 0 65px}
+header{display:flex;align-items:center;gap:12px;padding-bottom:18px;border-bottom:1px solid var(--line)}
+.mark{width:33px;height:33px;display:grid;place-items:center;border:1px solid #756b35;color:var(--yellow);font:700 9px ui-monospace,monospace}
+.brand{font-size:11px;font-weight:750;letter-spacing:.2em}.brand small{display:block;color:#777;font:8px ui-monospace,monospace;letter-spacing:.14em;margin-top:3px}
+main{max-width:610px;margin:48px auto 0}.kicker{font:8px ui-monospace,monospace;letter-spacing:.19em;color:#999}
+h1{margin:12px 0;font-size:clamp(34px,7vw,54px);font-weight:500;letter-spacing:-.07em;line-height:1.05}
+h2{margin:4px 0;font-size:18px;font-weight:500;letter-spacing:-.04em}
+p{color:var(--muted);font-size:12px;line-height:1.8}
+.field{margin-top:17px}label{display:block;color:#aaa;font:8px ui-monospace,monospace;letter-spacing:.13em;margin-bottom:7px}
+input,textarea{width:100%;padding:11px 0;color:var(--fg);background:transparent;border:0;border-bottom:1px solid #555;border-radius:0;outline:none}
+textarea{min-height:70px;resize:vertical}input:focus,textarea:focus{border-color:var(--yellow)}
+.action{width:100%;margin-top:20px;padding:13px 0;background:transparent;border:0;border-top:1px solid var(--yellow);color:var(--yellow);text-align:left;font:700 9px ui-monospace,monospace;letter-spacing:.15em}
+.action:disabled,.link:disabled{opacity:.4;cursor:wait}
+.error{min-height:18px;margin-top:12px;color:#e39a9a;font-size:11px}
+.status{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:25px 0;padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.status-name{display:flex;align-items:center;gap:9px;font:9px ui-monospace,monospace;letter-spacing:.12em}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--green)}.paused .dot{background:var(--red)}
+.small{font-size:9px;color:#777}
+.section{padding:20px 0;border-bottom:1px solid #292929}
+.section-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.count{color:var(--yellow);font:10px ui-monospace,monospace;letter-spacing:.1em}
+.row{display:flex;justify-content:space-between;gap:14px;padding:9px 0;border-bottom:1px solid #202020;font:11px ui-monospace,monospace}
+.row:last-child{border:0}.muted{color:#777}
+.links{display:flex;flex-wrap:wrap;gap:20px;margin-top:18px}
+.link{padding:8px 0;border:0;border-bottom:1px solid #555;background:none;color:#ddd;font:8px ui-monospace,monospace;letter-spacing:.12em}
+.link.yellow{color:var(--yellow);border-color:var(--yellow)}.link.red{color:#e49a9a;border-color:#704747}
+.footer{margin-top:32px;padding-top:13px;border-top:1px solid #252525;color:#666;font:8px ui-monospace,monospace;letter-spacing:.1em}
+@media(max-width:560px){.shell{width:calc(100% - 28px);padding-top:16px}main{margin-top:38px}.status{align-items:flex-start;flex-direction:column}}
+</style>
+</head>
+<body>
+<div class="shell">
+<header><div class="mark">ATC</div><div class="brand">DREAMCORE <small>AIR TRAFFIC CONTROL</small></div></header>
+
+<main id="loginView">
+  <div class="kicker">AUTHORISED ATC ACCESS</div>
+  <h1>Operations.</h1>
+  <p>Sign in with your ATC username. Passenger accounts do not have access to this console.</p>
+  <form id="loginForm">
+    <div class="field"><label for="username">USERNAME</label><input id="username" required minlength="3" maxlength="20" autocomplete="username" placeholder="ATC username"></div>
+    <div class="field"><label for="password">PASSWORD</label><input id="password" type="password" required minlength="6" autocomplete="current-password" placeholder="Password"></div>
+    <button class="action" id="loginButton">SIGN IN →</button>
+  </form>
+  <div class="error" id="loginError"></div>
+</main>
+
+<main id="atcView" class="hidden">
+  <div class="kicker">DREAMCORE / OPERATIONS DESK</div>
+  <h1>Passenger service.</h1>
+  <p>Control passenger-site availability and view account usernames. The root operator is kept outside the visible ATC directory.</p>
+
+  <div class="status" id="serviceStatus">
+    <div class="status-name"><i class="dot"></i><span id="serviceLabel">CHECKING SERVICE</span></div>
+    <span class="small" id="updatedAt">—</span>
+  </div>
+
+  <section class="section">
+    <div class="kicker">01 / PASSENGER WEBSITE</div>
+    <h2 id="serviceHeading">Service is open</h2>
+    <p id="serviceCopy">Passengers can use Dreamcore.</p>
+    <div class="field"><label for="noticeTitle">MAINTENANCE TITLE</label><input id="noticeTitle" maxlength="70" value="A short pause."></div>
+    <div class="field"><label for="noticeMessage">PASSENGER MESSAGE</label><textarea id="noticeMessage" maxlength="500">Dreamcore is temporarily unavailable while we carry out maintenance. Please check back shortly.</textarea></div>
+    <div class="links">
+      <button class="link red" id="pauseButton" type="button">PAUSE PASSENGER SITE</button>
+      <button class="link yellow" id="resumeButton" type="button">RESUME SERVICE</button>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="kicker">02 / PASSENGER ACCOUNTS</div><h2>Passenger directory</h2></div><span class="count" id="passengerCount">—</span></div>
+    <p>Username-only view. No passwords or private profile details are shown.</p>
+    <div id="passengerList"><div class="muted">Loading…</div></div>
+  </section>
+
+  <section class="section">
+    <div class="section-head"><div><div class="kicker">03 / ATC TEAM</div><h2>Controllers</h2></div><span class="count" id="atcCount">—</span></div>
+    <div id="atcList"><div class="muted">Loading…</div></div>
+    <button class="link" id="refreshButton" type="button">REFRESH DIRECTORIES ↻</button>
+  </section>
+
+  <section class="section hidden" id="createSection">
+    <div class="kicker">ROOT ONLY / ACCOUNT PROVISIONING</div>
+    <h2>Create ATC account</h2>
+    <p>Only the root operator can create controllers. New passwords are used only to create the Firebase Auth account and are never saved in the directory.</p>
+    <form id="createForm">
+      <div class="field"><label for="newUsername">NEW USERNAME</label><input id="newUsername" maxlength="20" minlength="3" required placeholder="Controller username"></div>
+      <div class="field"><label for="newPassword">TEMPORARY PASSWORD</label><input id="newPassword" type="password" minlength="8" required autocomplete="new-password" placeholder="Set a temporary password"></div>
+      <button class="action" id="createButton">CREATE ATC ACCOUNT →</button>
+    </form>
+  </section>
+
+  <div class="footer">SIGNED IN AS <span id="operatorRole">ATC</span></div>
+  <button class="link" id="logoutButton" type="button">SIGN OUT</button>
+  <div class="error" id="atcError"></div>
+</main>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,createUserWithEmailAndPassword,signOut,deleteUser} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {getFirestore,doc,getDoc,setDoc,onSnapshot,getDocs,collection,query,where,serverTimestamp} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+ apiKey:"AIzaSyCtt1k2EFdJXEwCLo2jZsGEf2742fHZrzk",
+ authDomain:"flyo-r3vxy.firebaseapp.com",
+ projectId:"flyo-r3vxy",
+ storageBucket:"flyo-r3vxy.firebasestorage.app",
+ messagingSenderId:"651442899138",
+ appId:"1:651442899138:web:699fef2737003088ee135b",
+ measurementId:"G-RB8KERN18T"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+// A separate Auth instance creates controller accounts without signing the root operator out.
+const provisionApp=initializeApp(firebaseConfig,"dreamcore-atc-provisioner");
+const provisionAuth=getAuth(provisionApp);
+const $=id=>document.getElementById(id);
+const maintenanceRef=doc(db,"systemSettings","maintenance");
+let currentUser=null,role=null,unsubMaintenance=null,maintenance=false,busy=false;
+
+function emailFor(username){return username.trim().toLowerCase()+"@accounts.focusflight.app"}
+function errorText(id,message){$(id).textContent=message||""}
+function esc(value){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function setBusy(value){busy=value;["pauseButton","resumeButton","createButton","refreshButton"].forEach(id=>{if($(id))$(id).disabled=value})}
+
+function showLogin(message=""){
+ $("loginView").classList.remove("hidden");$("atcView").classList.add("hidden");errorText("loginError",message);
+}
+function showATC(){
+ $("loginView").classList.add("hidden");$("atcView").classList.remove("hidden");
+ $("createSection").classList.toggle("hidden",role!=="root");
+ $("operatorRole").textContent=role==="root"?"ROOT OPERATOR":"ATC CONTROLLER";
+}
+
+function drawMaintenance(data){
+ maintenance=data.enabled===true;
+ $("serviceStatus").classList.toggle("paused",maintenance);
+ $("serviceLabel").textContent=maintenance?"PASSENGER SERVICE PAUSED":"PASSENGER SERVICE OPEN";
+ $("serviceHeading").textContent=maintenance?"Service is paused":"Service is open";
+ $("serviceCopy").textContent=maintenance?"Passenger pages are showing the maintenance notice. Resume when checks are complete.":"Passengers can sign in and browse available flights.";
+ if(data.title && $("noticeTitle")!==document.activeElement)$("noticeTitle").value=data.title;
+ if(data.message && $("noticeMessage")!==document.activeElement)$("noticeMessage").value=data.message;
+ $("updatedAt").textContent=data.updatedAt?.toDate?data.updatedAt.toDate().toLocaleString():"—";
+ $("pauseButton").disabled=maintenance||busy;
+ $("resumeButton").disabled=!maintenance||busy;
+}
+function watchMaintenance(){
+ if(unsubMaintenance)unsubMaintenance();
+ unsubMaintenance=onSnapshot(maintenanceRef,s=>drawMaintenance(s.exists()?s.data():{enabled:false}),e=>errorText("atcError","Maintenance status: "+e.message));
+}
+async function changeMaintenance(enabled){
+ if(!currentUser||busy)return;
+ setBusy(true);errorText("atcError","");
+ try{
+  await setDoc(maintenanceRef,{
+   enabled,
+   title:$("noticeTitle").value.trim()||"A short pause.",
+   message:$("noticeMessage").value.trim()||"Dreamcore is temporarily unavailable while we carry out maintenance.",
+   updatedAt:serverTimestamp(),
+   updatedBy:currentUser.uid
+  },{merge:true});
+ }catch(e){errorText("atcError",e.message)}
+ finally{setBusy(false);$("pauseButton").disabled=maintenance;$("resumeButton").disabled=!maintenance}
+}
+async function loadDirectories(){
+ errorText("atcError","");
+ try{
+  const passengerSnap=await getDocs(collection(db,"usernames"));
+  const passengers=passengerSnap.docs.map(d=>d.id).sort((a,b)=>a.localeCompare(b));
+  $("passengerCount").textContent=String(passengers.length);
+  $("passengerList").innerHTML=passengers.length?passengers.map(name=>`<div class="row"><span>${esc(name)}</span><span class="muted">PASSENGER</span></div>`).join(""):'<div class="muted">No passenger accounts yet.</div>';
+
+  const controllerSnap=await getDocs(query(collection(db,"atcAccounts"),where("role","==","controller")));
+  const controllers=controllerSnap.docs.map(d=>d.data().username).filter(Boolean).sort((a,b)=>a.localeCompare(b));
+  $("atcCount").textContent=String(controllers.length);
+  $("atcList").innerHTML=controllers.length?controllers.map(name=>`<div class="row"><span>${esc(name)}</span><span class="muted">ATC</span></div>`).join(""):'<div class="muted">No additional controllers yet.</div>';
+ }catch(e){console.error(e);errorText("atcError","Could not load account directories: "+e.message)}
+}
+
+$("loginForm").addEventListener("submit",async e=>{
+ e.preventDefault();errorText("loginError","");
+ const username=$("username").value.trim().toLowerCase(),password=$("password").value;
+ if(!/^[a-z0-9][a-z0-9._-]{2,19}$/.test(username)){errorText("loginError","Use a 3–20 character username.");return}
+ $("loginButton").disabled=true;
+ try{await signInWithEmailAndPassword(auth,emailFor(username),password)}
+ catch(err){errorText("loginError",err.code==="auth/invalid-credential"?"Username or password is incorrect.":err.message)}
+ finally{$("loginButton").disabled=false}
+});
+
+onAuthStateChanged(auth,async user=>{
+ currentUser=user;role=null;
+ if(unsubMaintenance){unsubMaintenance();unsubMaintenance=null}
+ if(!user){showLogin();return}
+ try{
+  // Only root may read the root marker. A controller gets permission-denied here,
+  // so treat that specific result as "not root" and continue checking its own record.
+  let rootSnap=null;
+  try{rootSnap=await getDoc(doc(db,"systemSettings","atcRoot"))}
+  catch(rootCheckError){
+   if(rootCheckError.code!=="permission-denied")throw rootCheckError;
+  }
+  if(rootSnap?.exists() && rootSnap.data().uid===user.uid){role="root"}
+  else{
+   const controllerSnap=await getDoc(doc(db,"atcAccounts",user.uid));
+   if(controllerSnap.exists() && controllerSnap.data().role==="controller")role="controller";
+  }
+  if(!role){await signOut(auth);showLogin("Access denied. This account is not an authorised ATC account.");return}
+  showATC();watchMaintenance();await loadDirectories();
+ }catch(err){
+  console.error(err);await signOut(auth);showLogin("Could not verify ATC access: "+err.message);
+ }
+});
+
+$("pauseButton").addEventListener("click",()=>changeMaintenance(true));
+$("resumeButton").addEventListener("click",()=>changeMaintenance(false));
+$("refreshButton").addEventListener("click",loadDirectories);
+$("createForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(role!=="root"||busy)return;
+ const username=$("newUsername").value.trim().toLowerCase(),password=$("newPassword").value;
+ if(!/^[a-z0-9][a-z0-9._-]{2,19}$/.test(username)){errorText("atcError","Use 3–20 characters, beginning with a letter or number.");return}
+ if(username==="atc573"){errorText("atcError","That username is reserved for root operations.");return}
+ if(password.length<8){errorText("atcError","Use at least 8 characters.");return}
+ setBusy(true);errorText("atcError","");
+ let createdUser=null;
+ try{
+  const credential=await createUserWithEmailAndPassword(provisionAuth,emailFor(username),password);
+  createdUser=credential.user;
+  await setDoc(doc(db,"atcAccounts",createdUser.uid),{
+   username,role:"controller",createdAt:serverTimestamp(),createdBy:currentUser.uid
+  });
+  await signOut(provisionAuth);
+  $("newUsername").value="";$("newPassword").value="";
+  await loadDirectories();
+  errorText("atcError","ATC account created.");
+ }catch(err){
+  if(createdUser)await deleteUser(createdUser).catch(()=>{});
+  errorText("atcError",err.code==="auth/email-already-in-use"?"That ATC username is already in use.":err.message);
+ }finally{setBusy(false)}
+});
+$("logoutButton").addEventListener("click",async()=>{
+ if(unsubMaintenance){unsubMaintenance();unsubMaintenance=null}
+ await signOut(auth);
+});
+</script>
+</body>
+</html>
