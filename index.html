@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Dreamcore ATC – Operations console</title>
+<title>Dreamcore – Study flights</title>
 <style>
 :root{--bg:#070707;--fg:#f1efe9;--mute:#8c8a84;--line:#2a2a28;--acc:#f5b400;--ok:#4fbf7a;--bad:#e5584a;--card:#0d0d0c;
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -57,6 +57,10 @@ td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
 .empty{color:var(--mute);margin:14px 0 0}
 ul.log{list-style:none;margin:0;padding:0}ul.log li{padding:10px 0;border-bottom:1px solid var(--line)}ul.log time{color:var(--mute);font-size:12px;display:block}
 hr{border:0;border-top:1px solid var(--line);margin:40px 0 28px}
+.modes{display:flex;gap:8px}.mode{background:none;border:1px solid var(--line);color:var(--fg);padding:8px 14px;font:inherit;cursor:pointer}.mode[aria-selected="true"]{border-color:var(--acc);color:var(--acc)}.mode:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.fl{display:grid;grid-template-columns:1.4fr 1fr auto;gap:16px;align-items:center;border:1px solid var(--line);background:var(--card);padding:16px 18px;margin-bottom:12px}.fl small{color:var(--mute)}
+.bar{height:4px;background:var(--line);margin:16px 0 20px}.bar i{display:block;height:100%;background:var(--acc);width:0}
+@media(max-width:640px){.fl{grid-template-columns:1fr}}
 .row{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end}
 @media(max-width:640px){.tabs,.rw{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
 </style>
@@ -64,10 +68,21 @@ hr{border:0;border-top:1px solid var(--line);margin:40px 0 28px}
 <body>
 <div class="wrap">
 <header>
-  <div class="brand"><div class="logo">ATC</div><div><b>DREAMCORE</b><small>Air traffic control</small></div></div>
-  <div class="who">Admin <a href="#signout">Sign out</a></div>
+  <div class="brand"><div class="logo">ATC</div><div><b>DREAMCORE</b><small>Study flights</small></div></div>
+  <nav class="modes"><button class="mode" data-m="pax" aria-selected="true">Passenger</button><button class="mode" data-m="atc" aria-selected="false">ATC control</button></nav>
 </header>
 
+<section id="v-pax">
+<h1>Your next study session is ready for departure.</h1>
+<p class="sub">Choose a route, take your seat, and make the time count.</p>
+<div id="paxHalt" class="banner" hidden></div>
+<div id="paxFlight" class="panel" hidden></div>
+<p class="msg" id="paxMsg" role="status"></p>
+<h2>Choose your flight</h2>
+<p class="sub" id="paxStats"></p>
+<div id="board"></div>
+</section>
+<div id="v-atc" hidden>
 <h1>Operations console</h1>
 <p class="sub">Pick a tool to open it.</p>
 
@@ -100,6 +115,7 @@ hr{border:0;border-top:1px solid var(--line);margin:40px 0 28px}
     <div class="full"><label>How often</label><div class="seg"><label><input type="radio" name="rep" value="daily" checked><span>Every day</span></label><label><input type="radio" name="rep" value="once"><span>One time only</span></label></div></div>
     <div><label for="time" id="tl">Time of flight (every day)</label><input id="time" type="time" required></div>
     <div id="dateBox" hidden><label for="date">Date</label><input id="date" type="date"></div>
+    <div><label for="len">Study session length (minutes)</label><input id="len" type="number" min="5" max="480" value="50" required></div>
     <div class="full"><label for="rwy">Runway</label><select id="rwy"></select></div>
     <div class="full"><button class="btn" type="submit">Allot flight</button><p class="msg" id="fm" role="status"></p></div>
   </form>
@@ -139,11 +155,12 @@ hr{border:0;border-top:1px solid var(--line);margin:40px 0 28px}
 <p class="msg" id="am" role="status"></p>
 <div id="accts"></div>
 </div>
+</div>
 
 <script>
 (function(){
 var KEY="dreamcore-atc-v1",RW=["09L","09R","27L","27R"];
-var S={flights:[],closed:{},halt:null,log:[],accts:[]};
+var S={flights:[],closed:{},halt:null,log:[],accts:[],sess:null,done:[],mode:"pax"};
 try{var r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function $(i){return document.getElementById(i)}
@@ -174,7 +191,7 @@ $("ff").onsubmit=function(e){e.preventDefault();var m=$("fm"),rw=$("rwy").value,
  if(S.closed[rw]&&S.closed[rw].until>when){}
  var dup=S.flights.some(function(f){return f.rw===rw&&f.status!=="Cancelled"&&(daily?(f.daily&&Math.abs(mins(f.hm)-mins(hm))<5):(!f.daily&&Math.abs(f.when-when)<5*60000))});
  if(dup){m.className="msg err";m.textContent="Runway "+rw+" already has a flight within 5 minutes of that time. Choose another time or runway.";return}
- var f={id:Date.now(),type:document.querySelector('input[name=type]:checked').value,no:$("no").value.trim().toUpperCase(),air:$("air").value.trim(),place:$("place").value.trim(),when:when,rw:rw,status:"Scheduled",daily:daily,hm:hm};
+ var f={id:Date.now(),type:document.querySelector('input[name=type]:checked').value,no:$("no").value.trim().toUpperCase(),air:$("air").value.trim(),place:$("place").value.trim(),when:when,rw:rw,status:"Scheduled",daily:daily,hm:hm,len:+$("len").value||50};
  S.flights.push(f);S.flights.sort(function(a,b){return (b.daily?1:0)-(a.daily?1:0)||(a.daily?mins(a.hm)-mins(b.hm):a.when-b.when)});note("Flight "+f.no+" allotted to runway "+rw+(daily?", flies every day at "+hm:" (one time)"));save();
  m.className="msg ok";m.textContent="Flight "+f.no+" allotted to runway "+rw+(daily?". It will fly every day at "+hm+".":".");$("ff").reset();repUI();draw()};
 
@@ -209,11 +226,34 @@ function runDaily(){var n=new Date(),key=dkey(n),cur=n.getHours()*60+n.getMinute
 function dailyRow(f){var st=f.paused?"Paused":(blocked(f.rw)?"Held":"Daily");
  var last=f.last?"<br><small style='color:var(--mute)'>Last: "+esc(f.lastMsg)+"</small>":"";
  return "<tr><td><b>"+esc(f.no)+"</b><br><small style='color:var(--mute)'>"+esc(f.air)+"</small></td><td>"+f.type+"</td><td>"+esc(f.place)+"</td><td>Every day<br><b>"+f.hm+"</b></td><td>"+f.rw+'</td><td><span class="pill s-'+st+'">'+st+"</span>"+last+'</td><td><button class="btn sm" data-a="pause" data-id="'+f.id+'">'+(f.paused?"Resume":"Pause")+'</button> <button class="btn sm danger" data-a="remove" data-id="'+f.id+'">Remove</button></td></tr>'}
+function mmss(ms){var s=Math.ceil(ms/1000),m=Math.floor(s/60);return m+":"+("0"+s%60).slice(-2)}
+function mode(m){document.querySelectorAll(".mode").forEach(function(b){b.setAttribute("aria-selected",b.dataset.m===m)});$("v-pax").hidden=m!=="pax";$("v-atc").hidden=m!=="atc";S.mode=m;save()}
+document.querySelectorAll(".mode").forEach(function(b){b.onclick=function(){mode(b.dataset.m)}});
+function finish(early){var s=S.sess;if(!s)return;var mins=early?Math.max(1,Math.round((Date.now()-s.start)/60000)):s.len;
+ S.done.push({no:s.no,mins:mins,at:Date.now()});S.sess=null;note("Flight "+s.no+" landed after "+mins+" min of study");save();
+ $("paxMsg").className="msg ok";$("paxMsg").textContent="Flight "+s.no+" has landed. "+mins+" minutes studied.";paxDraw();sessTick()}
+function sessTick(){var s=S.sess,p=$("paxFlight");if(!s){p.hidden=true;p.dataset.k="";return}
+ var left=s.start+s.len*60000-Date.now();if(left<=0){finish(false);return}
+ p.hidden=false;
+ if(p.dataset.k!==String(s.start)){p.dataset.k=String(s.start);p.innerHTML='<h2>In the air: '+esc(s.no)+'</h2><p class="sub">'+(s.dep?"To ":"From ")+esc(s.place)+'. Stay focused until you land.</p><div id="cd" style="font-size:44px;font-weight:600"></div><div class="bar"><i id="bar"></i></div><button class="btn danger" id="land">Land early</button>'}
+ $("cd").textContent=mmss(left);$("bar").style.width=(100-left/(s.len*60000)*100)+"%"}
+$("paxFlight").onclick=function(e){if(e.target.id==="land")finish(true)};
+$("board").onclick=function(e){var b=e.target.closest("button");if(!b)return;var f=S.flights.find(function(x){return x.id==b.dataset.take});if(!f)return;var m=$("paxMsg");
+ if(S.sess){m.className="msg err";m.textContent="You are already in the air. Land your current flight first.";return}
+ var bl=blocked(f.rw);if(bl){m.className="msg err";m.textContent=bl+" is stopped for maintenance.";return}
+ S.sess={no:f.no,place:f.place,dep:f.type==="Departure",len:f.len||50,start:Date.now()};note("Passenger boarded flight "+f.no);save();m.textContent="";sessTick()};
+function paxDraw(){var now=Date.now(),h=S.halt;
+ $("paxHalt").hidden=!h;if(h)$("paxHalt").innerHTML="<span>All flights are stopped for maintenance: "+esc(h.why)+". They reopen in "+left(h.until)+".</span>";
+ var list=S.flights.filter(function(f){return f.status!=="Cancelled"&&!f.paused&&(f.daily||f.when>now-(f.len||50)*60000)});
+ $("board").innerHTML=list.length?list.map(function(f){var held=blocked(f.rw),dep=f.type==="Departure";
+  return '<div class="fl"><div><b>'+esc(f.no)+'</b> <small>'+esc(f.air)+'</small><br>'+(dep?"To ":"From ")+esc(f.place)+'</div><div>'+(f.daily?"Every day at "+f.hm:fmt(f.when))+'<br><small>Runway '+f.rw+", "+(f.len||50)+" min</small></div><div>"+(held?'<span class="pill s-Held">Held</span>':'<button class="btn" data-take="'+f.id+'">Take seat</button>')+"</div></div>"}).join(""):'<p class="empty">No flights yet. Open ATC control and allot a flight, and it will show up here.</p>';
+ var tot=S.done.reduce(function(a,d){return a+d.mins},0);
+ $("paxStats").textContent=S.done.length?S.done.length+" flights landed, "+tot+" minutes studied.":""}
 function draw(){
  var now=Date.now();
  if(S.halt&&S.halt.until<=now){S.halt=null;note("Stop ended: all flights resumed");save()}
  RW.forEach(function(r){if(S.closed[r]&&S.closed[r].until<=now){delete S.closed[r];note("Runway "+r+" reopened");save()}});
- runDaily();var h=S.halt;$("halt").hidden=!h;if(h)$("haltText").textContent="All flights stopped: "+h.why+". Reopens in "+left(h.until)+".";
+ runDaily();paxDraw();var h=S.halt;$("halt").hidden=!h;if(h)$("haltText").textContent="All flights stopped: "+h.why+". Reopens in "+left(h.until)+".";
  $("rwStatus").innerHTML=RW.map(function(r){var c=S.closed[r];return c?'<div class="closed"><b>'+r+'</b><small>Closed: '+esc(c.why)+'<br>'+left(c.until)+' left</small><button class="btn sm" data-rw="'+r+'" style="margin-top:8px">Reopen</button></div>':'<div><b>'+r+'</b><small>Open</small></div>'}).join("");
  var rows=S.flights.map(function(f){if(f.daily)return dailyRow(f);var st=f.status;if(st==="Scheduled"&&blocked(f.rw))st="Held";
   return"<tr><td><b>"+esc(f.no)+"</b><br><small style='color:var(--mute)'>"+esc(f.air)+"</small></td><td>"+f.type+"</td><td>"+esc(f.place)+"</td><td>"+fmt(f.when)+"</td><td>"+f.rw+'</td><td><span class="pill s-'+st+'">'+st+"</span></td><td>"+(f.status==="Cancelled"?"":(f.status==="Scheduled"?'<button class="btn sm" data-a="clear" data-id="'+f.id+'">Clear</button> ':"")+'<button class="btn sm danger" data-a="cancel" data-id="'+f.id+'">Cancel</button>')+"</td></tr>"}).join("");
@@ -221,7 +261,7 @@ function draw(){
  $("log").innerHTML=S.log.length?S.log.map(function(l){return"<li><time>"+fmt(l.t)+"</time>"+esc(l.m)+"</li>"}).join(""):'<li class="empty">No alerts yet.</li>';
  $("accts").innerHTML=S.accts.length?S.accts.map(function(u){return'<p style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;margin:0">'+esc(u)+' <button class="btn sm danger" data-u="'+esc(u)+'">Remove</button></p>'}).join(""):'<p class="empty">No accounts yet.</p>';
 }
-draw();setInterval(draw,10000);
+draw();setInterval(draw,10000);setInterval(sessTick,1000);mode(S.mode||"pax");sessTick();
 })();
 </script>
 </body>
