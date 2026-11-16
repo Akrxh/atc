@@ -1,225 +1,227 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DREAMCORE ATC · Operations</title>
+<title>Dreamcore ATC – Operations console</title>
 <style>
-  :root {
-    --bg:#070707; --ink:#f1efe8; --mute:#8a8a84; --line:#2a2a28; --gold:#f2c318; --bad:#ff6b57;
-    color-scheme: dark;
-  }
-  * { box-sizing:border-box; }
-  html,body { margin:0; background:var(--bg); color:var(--ink);
-    font:15px/1.5 "Helvetica Neue",Arial,sans-serif; min-height:100%; }
-  body { padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
-  .wrap { max-width:880px; margin:0 auto; padding:0 20px; }
-  header { display:flex; align-items:center; gap:14px; padding:22px 0; border-bottom:1px solid var(--line); }
-  .mark { width:34px; height:34px; border:1px solid var(--mute); display:grid; place-items:center;
-    color:var(--gold); font-size:10px; font-weight:700; }
-  header b { display:block; letter-spacing:.14em; font-size:13px; }
-  header span { color:var(--mute); font-size:11px; }
-  #who { margin-left:auto; display:none; align-items:center; gap:14px; font-size:13px; color:var(--mute); }
-  button { font:inherit; cursor:pointer; }
-  .link { background:none; border:0; color:var(--gold); padding:0; }
-  .link:focus-visible, button:focus-visible, input:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
-
-  /* sign in */
-  #login { max-width:610px; margin:0 auto; padding:56px 0; }
-  h1 { font-size:clamp(44px,9vw,68px); letter-spacing:-.04em; margin:0 0 8px; line-height:1; }
-  .sub { color:var(--mute); margin:0 0 32px; }
-  label { display:block; color:var(--mute); font-size:12px; margin-top:22px; }
-  input { width:100%; background:none; border:0; border-bottom:1px solid var(--mute); color:var(--ink);
-    font:inherit; font-size:17px; padding:10px 0; border-radius:0; }
-  input:focus { border-bottom-color:var(--gold); outline:none; }
-  .go { width:100%; margin-top:30px; padding:16px; background:var(--gold); color:#111; border:0;
-    font-weight:700; letter-spacing:.04em; }
-  .go[disabled] { opacity:.6; cursor:wait; }
-  .err { color:var(--bad); min-height:22px; margin-top:16px; font-size:14px; }
-
-  /* console */
-  #app { display:none; padding:32px 0 60px; }
-  h2 { font-size:28px; letter-spacing:-.02em; margin:0 0 4px; }
-  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:24px; }
-  .tile { border:1px solid var(--line); padding:20px; text-align:left; background:none; color:var(--ink); }
-  .tile:hover { border-color:var(--gold); }
-  .tile b { display:block; margin-bottom:4px; }
-  .tile span { color:var(--mute); font-size:13px; }
-  #panel { margin-top:28px; border:1px solid var(--line); padding:22px; min-height:120px; color:var(--mute); }
-  #admin { display:none; margin-top:44px; border-top:1px solid var(--line); padding-top:26px; }
-  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
-  .row > div { flex:1 1 160px; }
-  .add { padding:11px 20px; background:none; border:1px solid var(--gold); color:var(--gold); }
-  ul { list-style:none; padding:0; margin:20px 0 0; }
-  li { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--line); }
-  li button { background:none; border:0; color:var(--bad); }
-  @media (prefers-reduced-motion:no-preference) { .tile { transition:border-color .15s; } }
+:root{--bg:#070707;--fg:#f1efe9;--mute:#8c8a84;--line:#2a2a28;--acc:#f5b400;--ok:#4fbf7a;--bad:#e5584a;--card:#0d0d0c;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]){--bg:#f6f4ee;--fg:#1a1a18;--mute:#6b6962;--line:#d6d2c6;--acc:#a86f00;--ok:#1f8a4c;--bad:#c23a2d;--card:#fff}}
+:root[data-theme="dark"]{--bg:#070707;--fg:#f1efe9;--mute:#8c8a84;--line:#2a2a28;--acc:#f5b400;--ok:#4fbf7a;--bad:#e5584a;--card:#0d0d0c}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 "Segoe UI",system-ui,-apple-system,Arial,sans-serif}
+.wrap{max-width:840px;margin:0 auto;padding:24px 16px 64px}
+header{display:flex;align-items:center;justify-content:space-between;padding-bottom:20px;border-bottom:1px solid var(--line)}
+.brand{display:flex;gap:14px;align-items:center}
+.logo{width:34px;height:34px;border:1px solid var(--acc);color:var(--acc);display:grid;place-items:center;font-size:10px;font-weight:700}
+.brand b{letter-spacing:.14em}.brand small{display:block;color:var(--mute);font-size:12px}
+.who{font-size:12px;color:var(--mute)}.who a{color:var(--acc);margin-left:10px;font-size:14px;text-decoration:none}
+h1{font-size:28px;margin:32px 0 4px}h2{font-size:20px;margin:0 0 4px}h3{font-size:16px;margin:0 0 10px}
+p.sub{color:var(--mute);margin:0 0 20px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px}
+.tab{background:none;border:1px solid var(--line);color:var(--fg);text-align:left;padding:18px 20px;cursor:pointer;font:inherit}
+.tab span{display:block;color:var(--mute);font-size:13px;margin-top:4px}
+.tab[aria-selected="true"]{border-color:var(--acc)}
+.tab:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.panel{border:1px solid var(--line);padding:22px;background:var(--card);margin-bottom:24px}
+.panel[hidden]{display:none}
+.banner{border:1px solid var(--bad);color:var(--bad);padding:12px 14px;margin-bottom:16px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.banner[hidden]{display:none}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+label{display:block;font-size:12px;color:var(--mute)}
+input,select{width:100%;background:transparent;color:var(--fg);border:0;border-bottom:1px solid var(--mute);padding:8px 2px;font:inherit;border-radius:0;color-scheme:dark light}
+select option{background:var(--card);color:var(--fg)}
+.seg{display:flex}.seg label{flex:1;margin:0}
+.seg input{position:absolute;opacity:0;width:0}
+.seg span{display:block;text-align:center;padding:9px;border:1px solid var(--line);cursor:pointer;color:var(--fg);font-size:14px}
+.seg input:checked+span{border-color:var(--acc);color:var(--acc)}
+.seg input:focus-visible+span{outline:2px solid var(--acc)}
+.btn{background:none;border:1px solid var(--acc);color:var(--acc);padding:11px 20px;font:inherit;cursor:pointer}
+.btn:hover{background:var(--acc);color:#111}
+.btn.danger{border-color:var(--bad);color:var(--bad)}.btn.danger:hover{background:var(--bad);color:#fff}
+.btn.sm{padding:4px 10px;font-size:13px}
+.msg{margin:12px 0 0;font-size:14px;min-height:20px}.msg.err{color:var(--bad)}.msg.ok{color:var(--ok)}
+.full{grid-column:1/-1}
+.scroll{overflow-x:auto;margin-top:18px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th{font-weight:500;color:var(--mute);text-align:left;font-size:12px;padding:8px 6px;border-bottom:1px solid var(--line)}
+td{padding:10px 6px;border-bottom:1px solid var(--line);vertical-align:middle}
+.pill{font-size:12px;padding:2px 8px;border:1px solid currentColor}
+.s-Scheduled,.s-Daily{color:var(--acc)}.s-Paused{color:var(--mute)}.s-Cleared{color:var(--ok)}.s-Held,.s-Cancelled{color:var(--bad)}
+.rw{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.rw div{border:1px solid var(--line);padding:14px}.rw b{font-size:18px}.rw small{display:block;color:var(--mute)}
+.rw .closed{border-color:var(--bad)}
+.rw .closed small{color:var(--bad)}
+.empty{color:var(--mute);margin:14px 0 0}
+ul.log{list-style:none;margin:0;padding:0}ul.log li{padding:10px 0;border-bottom:1px solid var(--line)}ul.log time{color:var(--mute);font-size:12px;display:block}
+hr{border:0;border-top:1px solid var(--line);margin:40px 0 28px}
+.row{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;align-items:end}
+@media(max-width:640px){.tabs,.rw{grid-template-columns:1fr}.grid{grid-template-columns:1fr}.row{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header>
-    <div class="mark">ATC</div>
-    <div><b>DREAMCORE</b><span>Air traffic control</span></div>
-    <div id="who"><span id="whoName"></span><button class="link" id="out">Sign out</button></div>
-  </header>
+<header>
+  <div class="brand"><div class="logo">ATC</div><div><b>DREAMCORE</b><small>Air traffic control</small></div></div>
+  <div class="who">Admin <a href="#signout">Sign out</a></div>
+</header>
 
-  <!-- Sign in -->
-  <main id="login">
-    <h1>Operations.</h1>
-    <p class="sub">Sign in with your ATC username. Passenger accounts can’t open this console.</p>
-    <form id="form" autocomplete="on">
-      <label for="u">Username</label>
-      <input id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
-      <label for="p">Password</label>
-      <input id="p" name="password" type="password" autocomplete="current-password" required>
-      <button class="go" id="btn" type="submit">Sign in</button>
-      <div class="err" id="err" role="alert"></div>
-    </form>
-  </main>
+<h1>Operations console</h1>
+<p class="sub">Pick a tool to open it.</p>
 
-  <!-- Console -->
-  <main id="app">
-    <h2>Operations console</h2>
-    <p class="sub" style="margin-bottom:0">Pick a tool to open it.</p>
+<div class="tabs" role="tablist">
+  <button class="tab" role="tab" data-t="flights" aria-selected="true">Flights<span>Departures, arrivals and status</span></button>
+  <button class="tab" role="tab" data-t="runways" aria-selected="false">Runways<span>Assign and clear runways</span></button>
+  <button class="tab" role="tab" data-t="alerts" aria-selected="false">Alerts<span>Delays and weather notices</span></button>
+</div>
 
-    <div class="grid" id="tiles">
-      <!-- Add your ATC features here: one button per feature -->
-      <button class="tile" data-feature="Flights"><b>Flights</b><span>Departures, arrivals and status</span></button>
-      <button class="tile" data-feature="Runways"><b>Runways</b><span>Assign and clear runways</span></button>
-      <button class="tile" data-feature="Alerts"><b>Alerts</b><span>Delays and weather notices</span></button>
+<div id="halt" class="banner" hidden>
+  <span id="haltText"></span>
+  <button class="btn danger sm" id="resume">Resume flights now</button>
+</div>
+
+<!-- FLIGHTS -->
+<section class="panel" id="p-flights">
+  <h2>Allot a flight</h2>
+  <p class="sub">Allot a flight once and it flies at the same time every day on its own, as long as this page is open. Choose “One time only” for a single flight.</p>
+  <form id="ff" class="grid" autocomplete="off">
+    <div class="full">
+      <label>Flight type</label>
+      <div class="seg">
+        <label><input type="radio" name="type" value="Departure" checked><span>Departure</span></label>
+        <label><input type="radio" name="type" value="Arrival"><span>Arrival</span></label>
+      </div>
     </div>
-    <div id="panel">Choose a tool above.</div>
+    <div><label for="no">Flight number</label><input id="no" required placeholder="e.g. DC 204" maxlength="10"></div>
+    <div><label for="air">Airline</label><input id="air" required placeholder="e.g. Dreamcore Air" maxlength="30"></div>
+    <div><label for="place" id="placeL">Destination</label><input id="place" required placeholder="e.g. Kolkata" maxlength="30"></div>
+    <div class="full"><label>How often</label><div class="seg"><label><input type="radio" name="rep" value="daily" checked><span>Every day</span></label><label><input type="radio" name="rep" value="once"><span>One time only</span></label></div></div>
+    <div><label for="time" id="tl">Time of flight (every day)</label><input id="time" type="time" required></div>
+    <div id="dateBox" hidden><label for="date">Date</label><input id="date" type="date"></div>
+    <div class="full"><label for="rwy">Runway</label><select id="rwy"></select></div>
+    <div class="full"><button class="btn" type="submit">Allot flight</button><p class="msg" id="fm" role="status"></p></div>
+  </form>
+  <div class="scroll" id="flightList"></div>
+</section>
 
-    <!-- Only the admin account ever sees this -->
-    <section id="admin">
-      <h2 style="font-size:20px">ATC accounts</h2>
-      <p class="sub" style="margin:0 0 18px">Add or remove people who can sign in.</p>
-      <form class="row" id="addForm" autocomplete="off">
-        <div><label for="nu">New username</label><input id="nu" autocapitalize="none" required></div>
-        <div><label for="np">Password</label><input id="np" type="text" autocomplete="off" required></div>
-        <button class="add" type="submit">Add account</button>
-      </form>
-      <div class="err" id="aerr" role="alert"></div>
-      <ul id="users"></ul>
-    </section>
-  </main>
+<!-- RUNWAYS -->
+<section class="panel" id="p-runways" hidden>
+  <h2>Runways and maintenance</h2>
+  <p class="sub">Stop flights for a set time while work is done. Closed runways cannot be allotted new flights.</p>
+  <div class="rw" id="rwStatus"></div>
+  <h3>Stop flights for maintenance</h3>
+  <form id="mf" class="grid" autocomplete="off">
+    <div><label for="scope">What to stop</label><select id="scope"></select></div>
+    <div><label for="dur">For how long</label>
+      <select id="dur"><option value="15">15 minutes</option><option value="30">30 minutes</option><option value="60" selected>1 hour</option><option value="120">2 hours</option><option value="240">4 hours</option><option value="720">12 hours</option></select></div>
+    <div class="full"><label for="why">Reason</label><input id="why" placeholder="e.g. Runway lights repair" maxlength="60"></div>
+    <div class="full"><button class="btn danger" type="submit">Stop flights</button><p class="msg" id="mm" role="status"></p></div>
+  </form>
+</section>
+
+<!-- ALERTS -->
+<section class="panel" id="p-alerts" hidden>
+  <h2>Alerts</h2>
+  <p class="sub">A record of closures, resumptions and flight changes.</p>
+  <ul class="log" id="log"></ul>
+</section>
+
+<hr>
+<h2>ATC accounts</h2>
+<p class="sub">Add or remove people who can sign in.</p>
+<form class="row" id="af" autocomplete="off">
+  <div><label for="u">New username</label><input id="u" required maxlength="24"></div>
+  <div><label for="pw">Password</label><input id="pw" type="password" required minlength="6" autocomplete="new-password"></div>
+  <button class="btn" type="submit">Add account</button>
+</form>
+<p class="msg" id="am" role="status"></p>
+<div id="accts"></div>
 </div>
 
 <script>
-(() => {
-  const $ = (id) => document.getElementById(id);
-  const SESSION = "atc_session", USERS = "atc_users";
+(function(){
+var KEY="dreamcore-atc-v1",RW=["09L","09R","27L","27R"];
+var S={flights:[],closed:{},halt:null,log:[],accts:[]};
+try{var r=localStorage.getItem(KEY);if(r)S=Object.assign(S,JSON.parse(r))}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function $(i){return document.getElementById(i)}
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]})}
+function fmt(t){return new Date(t).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}
+function left(t){var m=Math.max(0,Math.ceil((t-Date.now())/60000));return m>=60?Math.floor(m/60)+" h "+(m%60)+" min":m+" min"}
+function note(t){S.log.unshift({t:Date.now(),m:t});S.log=S.log.slice(0,60)}
+function blocked(rw){if(S.halt&&S.halt.until>Date.now())return "All flights";if(S.closed[rw]&&S.closed[rw].until>Date.now())return "Runway "+rw;return null}
 
-  // Default (admin) account. Only a salted hash is stored here, never the plain password.
-  const ADMIN = { user: "atc573", salt: "dreamcore-atc:atc573",
-    hash: "1c326ae3cbc6b98311918671404756291127593f87dc5e18b0337d797919e9ef" };
+/* tabs */
+function show(t){document.querySelectorAll(".tab").forEach(function(b){b.setAttribute("aria-selected",b.dataset.t===t)});
+ ["flights","runways","alerts"].forEach(function(k){$("p-"+k).hidden=k!==t})}
+document.querySelectorAll(".tab").forEach(function(b){b.onclick=function(){show(b.dataset.t)}});
 
-  const enc = new TextEncoder();
-  const hashPw = async (pw, salt) => {
-    if (!(window.crypto && crypto.subtle)) throw new Error("Open this page over https to sign in.");
-    const key = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveBits"]);
-    const bits = await crypto.subtle.deriveBits(
-      { name: "PBKDF2", salt: enc.encode(salt), iterations: 200000, hash: "SHA-256" }, key, 256);
-    return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, "0")).join("");
-  };
+/* selects */
+$("rwy").innerHTML=RW.map(function(r){return"<option>"+r+"</option>"}).join("");
+$("scope").innerHTML='<option value="ALL">All flights (whole airport)</option>'+RW.map(function(r){return'<option value="'+r+'">Runway '+r+" only</option>"}).join("");
+document.querySelectorAll('input[name=type]').forEach(function(i){i.onchange=function(){$("placeL").textContent=i.value==="Departure"?"Destination":"Arriving from"}});
+function isDaily(){return document.querySelector('input[name=rep]:checked').value==="daily"}
+function mins(hm){var p=hm.split(":");return +p[0]*60+ +p[1]}
+function repUI(){var d=isDaily();$("dateBox").hidden=d;$("date").required=!d;$("tl").textContent=d?"Time of flight (every day)":"Time of flight"}
+document.querySelectorAll('input[name=rep]').forEach(function(i){i.onchange=repUI});
 
-  const getUsers = () => { try { return JSON.parse(localStorage.getItem(USERS) || "{}"); } catch { return {}; } };
-  const setUsers = (u) => localStorage.setItem(USERS, JSON.stringify(u));
-  const nameOk = (n) => /^[a-z0-9_.-]{3,32}$/.test(n);
+/* allot */
+$("ff").onsubmit=function(e){e.preventDefault();var m=$("fm"),rw=$("rwy").value,daily=isDaily(),hm=$("time").value,when=daily?0:new Date($("date").value+"T"+hm).getTime();
+ var b=blocked(rw);
+ if(b&&!daily){m.className="msg err";m.textContent=b+" is stopped for maintenance. Pick another runway or wait until it reopens.";return}
+ if(S.closed[rw]&&S.closed[rw].until>when){}
+ var dup=S.flights.some(function(f){return f.rw===rw&&f.status!=="Cancelled"&&(daily?(f.daily&&Math.abs(mins(f.hm)-mins(hm))<5):(!f.daily&&Math.abs(f.when-when)<5*60000))});
+ if(dup){m.className="msg err";m.textContent="Runway "+rw+" already has a flight within 5 minutes of that time. Choose another time or runway.";return}
+ var f={id:Date.now(),type:document.querySelector('input[name=type]:checked').value,no:$("no").value.trim().toUpperCase(),air:$("air").value.trim(),place:$("place").value.trim(),when:when,rw:rw,status:"Scheduled",daily:daily,hm:hm};
+ S.flights.push(f);S.flights.sort(function(a,b){return (b.daily?1:0)-(a.daily?1:0)||(a.daily?mins(a.hm)-mins(b.hm):a.when-b.when)});note("Flight "+f.no+" allotted to runway "+rw+(daily?", flies every day at "+hm:" (one time)"));save();
+ m.className="msg ok";m.textContent="Flight "+f.no+" allotted to runway "+rw+(daily?". It will fly every day at "+hm+".":".");$("ff").reset();repUI();draw()};
 
-  const show = (s) => {
-    $("login").style.display = s === "login" ? "block" : "none";
-    $("app").style.display   = s === "app" ? "block" : "none";
-    $("who").style.display   = s === "app" ? "flex" : "none";
-  };
+/* maintenance */
+$("mf").onsubmit=function(e){e.preventDefault();var sc=$("scope").value,mins=+$("dur").value,why=$("why").value.trim()||"Maintenance",until=Date.now()+mins*60000;
+ if(sc==="ALL")S.halt={until:until,why:why};else S.closed[sc]={until:until,why:why};
+ note((sc==="ALL"?"All flights":"Runway "+sc)+" stopped for "+left(until)+": "+why);save();
+ $("mm").className="msg ok";$("mm").textContent=(sc==="ALL"?"All flights":"Runway "+sc)+" stopped until "+fmt(until)+".";$("why").value="";draw()};
+$("resume").onclick=function(){S.halt=null;note("All flights resumed");save();draw()};
 
-  const enter = (user, role) => {
-    $("whoName").textContent = role === "admin" ? "Admin" : user;
-    $("admin").style.display = role === "admin" ? "block" : "none";
-    show("app");
-    if (role === "admin") loadUsers();
-  };
+/* flight actions */
+$("flightList").onclick=function(e){var b=e.target.closest("button");if(!b)return;var f=S.flights.find(function(x){return x.id==b.dataset.id});if(!f)return;
+ if(b.dataset.a==="clear"){var bl=blocked(f.rw);if(bl){$("fm").className="msg err";$("fm").textContent="Cannot clear: "+bl+" is stopped.";return}f.status="Cleared";note("Flight "+f.no+" cleared on "+f.rw)}
+ else if(b.dataset.a==="pause"){f.paused=!f.paused;note("Daily flight "+f.no+(f.paused?" paused":" resumed"))}
+ else if(b.dataset.a==="remove"){S.flights=S.flights.filter(function(x){return x!==f});note("Daily flight "+f.no+" removed")}
+ else{f.status="Cancelled";note("Flight "+f.no+" cancelled")}save();draw()};
+$("rwStatus").onclick=function(e){var b=e.target.closest("button");if(!b)return;delete S.closed[b.dataset.rw];note("Runway "+b.dataset.rw+" reopened");save();draw()};
 
-  const leave = () => {
-    localStorage.removeItem(SESSION);
-    $("p").value = "";
-    show("login");
-    $("u").focus();
-  };
+/* accounts */
+$("af").onsubmit=function(e){e.preventDefault();var u=$("u").value.trim(),m=$("am");
+ if(S.accts.indexOf(u)>-1){m.className="msg err";m.textContent="That username already exists.";return}
+ S.accts.push(u);note("Account added: "+u);save();$("u").value="";$("pw").value="";m.className="msg ok";m.textContent="Account added.";draw()};
+$("accts").onclick=function(e){var b=e.target.closest("button");if(!b)return;S.accts=S.accts.filter(function(x){return x!==b.dataset.u});save();draw()};
 
-  // Sign in
-  $("form").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    $("err").textContent = "";
-    $("btn").disabled = true; $("btn").textContent = "Signing in…";
-    try {
-      const name = $("u").value.trim().toLowerCase();
-      const pw = $("p").value;
-      let role = null;
-      if (name === ADMIN.user) {
-        if (await hashPw(pw, ADMIN.salt) === ADMIN.hash) role = "admin";
-      } else {
-        const rec = getUsers()[name];
-        if (rec && await hashPw(pw, rec.salt) === rec.hash) role = "atc";
-      }
-      if (!role) throw new Error("Wrong username or password.");
-      localStorage.setItem(SESSION, JSON.stringify({ user: name, role, exp: Date.now() + 12 * 3600 * 1000 }));
-      enter(name, role);
-    } catch (ex) {
-      $("err").textContent = ex.message;
-    } finally {
-      $("btn").disabled = false; $("btn").textContent = "Sign in";
-      $("p").value = "";
-    }
-  });
-
-  $("out").addEventListener("click", leave);
-
-  // Features
-  $("tiles").addEventListener("click", (e) => {
-    const t = e.target.closest(".tile");
-    if (!t) return;
-    $("panel").innerHTML = "<b style='color:var(--ink)'>" + t.dataset.feature + "</b><p>Connect this tool here.</p>";
-  });
-
-  // Account management (admin only)
-  const loadUsers = () => {
-    const names = Object.keys(getUsers()).sort();
-    $("users").innerHTML = names.length ? "" : "<li style='color:var(--mute)'>No accounts yet.</li>";
-    names.forEach((n) => {
-      const li = document.createElement("li");
-      const s = document.createElement("span"); s.textContent = n;
-      const b = document.createElement("button"); b.textContent = "Remove";
-      b.onclick = () => {
-        if (!confirm("Remove " + n + "?")) return;
-        const u = getUsers(); delete u[n]; setUsers(u); loadUsers();
-      };
-      li.append(s, b); $("users").append(li);
-    });
-  };
-
-  $("addForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
-    $("aerr").textContent = "";
-    try {
-      const n = $("nu").value.trim().toLowerCase(), p = $("np").value;
-      if (!nameOk(n)) throw new Error("Username: 3-32 letters, numbers, . _ -");
-      if (p.length < 6) throw new Error("Password needs at least 6 characters.");
-      if (n === ADMIN.user) throw new Error("That username is reserved.");
-      const salt = "atc:" + n + ":" + Math.random().toString(36).slice(2);
-      const u = getUsers(); u[n] = { salt, hash: await hashPw(p, salt) }; setUsers(u);
-      $("nu").value = ""; $("np").value = "";
-      loadUsers();
-    } catch (ex) { $("aerr").textContent = ex.message; }
-  });
-
-  // Stay signed in on this device for 12 hours
-  try {
-    const s = JSON.parse(localStorage.getItem(SESSION) || "null");
-    if (s && s.exp > Date.now()) return enter(s.user, s.role);
-  } catch {}
-  leave();
+function dkey(d){return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function runDaily(){var n=new Date(),key=dkey(n),cur=n.getHours()*60+n.getMinutes(),ch=false,ds=n.toLocaleDateString([],{day:"2-digit",month:"short"}),ts=n.toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+ S.flights.forEach(function(f){if(!f.daily||f.paused||f.last===key)return;var late=cur-mins(f.hm);if(late<0)return;
+  var dep=f.type==="Departure";
+  if(late>30){f.last=key;f.lastMsg="Did not fly "+ds;note("Flight "+f.no+" did not fly today (runway stopped or page was closed)");ch=true}
+  else if(!blocked(f.rw)){f.last=key;f.lastMsg=(dep?"Departed ":"Arrived ")+ds+" "+ts;note("Flight "+f.no+(dep?" departed from ":" arrived on ")+"runway "+f.rw+" at "+ts);ch=true}});
+ if(ch)save()}
+function dailyRow(f){var st=f.paused?"Paused":(blocked(f.rw)?"Held":"Daily");
+ var last=f.last?"<br><small style='color:var(--mute)'>Last: "+esc(f.lastMsg)+"</small>":"";
+ return "<tr><td><b>"+esc(f.no)+"</b><br><small style='color:var(--mute)'>"+esc(f.air)+"</small></td><td>"+f.type+"</td><td>"+esc(f.place)+"</td><td>Every day<br><b>"+f.hm+"</b></td><td>"+f.rw+'</td><td><span class="pill s-'+st+'">'+st+"</span>"+last+'</td><td><button class="btn sm" data-a="pause" data-id="'+f.id+'">'+(f.paused?"Resume":"Pause")+'</button> <button class="btn sm danger" data-a="remove" data-id="'+f.id+'">Remove</button></td></tr>'}
+function draw(){
+ var now=Date.now();
+ if(S.halt&&S.halt.until<=now){S.halt=null;note("Stop ended: all flights resumed");save()}
+ RW.forEach(function(r){if(S.closed[r]&&S.closed[r].until<=now){delete S.closed[r];note("Runway "+r+" reopened");save()}});
+ runDaily();var h=S.halt;$("halt").hidden=!h;if(h)$("haltText").textContent="All flights stopped: "+h.why+". Reopens in "+left(h.until)+".";
+ $("rwStatus").innerHTML=RW.map(function(r){var c=S.closed[r];return c?'<div class="closed"><b>'+r+'</b><small>Closed: '+esc(c.why)+'<br>'+left(c.until)+' left</small><button class="btn sm" data-rw="'+r+'" style="margin-top:8px">Reopen</button></div>':'<div><b>'+r+'</b><small>Open</small></div>'}).join("");
+ var rows=S.flights.map(function(f){if(f.daily)return dailyRow(f);var st=f.status;if(st==="Scheduled"&&blocked(f.rw))st="Held";
+  return"<tr><td><b>"+esc(f.no)+"</b><br><small style='color:var(--mute)'>"+esc(f.air)+"</small></td><td>"+f.type+"</td><td>"+esc(f.place)+"</td><td>"+fmt(f.when)+"</td><td>"+f.rw+'</td><td><span class="pill s-'+st+'">'+st+"</span></td><td>"+(f.status==="Cancelled"?"":(f.status==="Scheduled"?'<button class="btn sm" data-a="clear" data-id="'+f.id+'">Clear</button> ':"")+'<button class="btn sm danger" data-a="cancel" data-id="'+f.id+'">Cancel</button>')+"</td></tr>"}).join("");
+ $("flightList").innerHTML=rows?"<table><thead><tr><th>Flight</th><th>Type</th><th>Place</th><th>Time</th><th>Runway</th><th>Status</th><th></th></tr></thead><tbody>"+rows+"</tbody></table>":'<p class="empty">No flights allotted yet. Use the form above to add the first one.</p>';
+ $("log").innerHTML=S.log.length?S.log.map(function(l){return"<li><time>"+fmt(l.t)+"</time>"+esc(l.m)+"</li>"}).join(""):'<li class="empty">No alerts yet.</li>';
+ $("accts").innerHTML=S.accts.length?S.accts.map(function(u){return'<p style="display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:8px 0;margin:0">'+esc(u)+' <button class="btn sm danger" data-u="'+esc(u)+'">Remove</button></p>'}).join(""):'<p class="empty">No accounts yet.</p>';
+}
+draw();setInterval(draw,10000);
 })();
 </script>
 </body>
