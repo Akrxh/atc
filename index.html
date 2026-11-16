@@ -1,171 +1,226 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#070707">
-<title>Dreamcore — Operations</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>DREAMCORE ATC · Operations</title>
 <style>
-:root{color-scheme:dark;--bg:#070707;--fg:#f1f0ec;--muted:#8b8a84;--line:#34332d;--gold:#e6ca22;--red:#ff8989}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:Arial,Helvetica,sans-serif;min-height:100vh}
-.shell{width:min(880px,calc(100% - 48px));margin:25px auto}
-header{height:52px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;gap:13px}
-.mark{width:33px;height:33px;border:1px solid #71651b;color:var(--gold);display:grid;place-items:center;font-size:9px;font-weight:700}
-.brand{padding-top:4px;font-size:11px;letter-spacing:2px;font-weight:700}
-.brand small{display:block;color:#77736a;font-size:7px;letter-spacing:2px;margin-top:6px;font-weight:400}
-main{width:min(610px,100%);margin:48px auto 0}
-.kicker{font-size:8px;letter-spacing:2px;color:#8b8b83;margin-bottom:12px}
-h1{font-size:52px;letter-spacing:-3px;margin:0 0 13px;font-weight:600}
-.intro{font-size:12px;color:#aaa9a2;line-height:1.7;margin:0 0 22px}
-label{display:block;font-size:8px;letter-spacing:1.5px;color:#a5a39a;margin:0 0 7px}
-input{width:100%;height:46px;border:0;border-bottom:1px solid #55534c;background:transparent;color:#fff;font-size:14px;padding:0;outline:none;border-radius:0}
-input:focus{border-bottom:2px solid var(--gold)}
-.field{margin-bottom:17px}
-button{width:100%;height:43px;margin-top:3px;background:transparent;border:0;border-top:1px solid var(--gold);color:var(--gold);text-align:left;font-weight:700;font-size:9px;letter-spacing:1.4px;cursor:pointer}
-button:disabled{opacity:.55;cursor:wait}
-#message{font-size:11px;line-height:1.6;color:var(--red);margin-top:14px;min-height:18px}
-#dashboard{display:none;margin-top:34px;border-top:1px solid var(--line);padding-top:20px}
-#dashboard h2{font-size:25px;margin:0 0 10px}
-#dashboard p{color:var(--muted);font-size:12px}
-#signout{margin-top:25px}
-@media(max-width:520px){.shell{width:calc(100% - 36px)}main{margin-top:52px}h1{font-size:45px}}
+  :root {
+    --bg:#070707; --ink:#f1efe8; --mute:#8a8a84; --line:#2a2a28; --gold:#f2c318; --bad:#ff6b57;
+    color-scheme: dark;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--ink);
+    font:15px/1.5 "Helvetica Neue",Arial,sans-serif; min-height:100%; }
+  body { padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom); }
+  .wrap { max-width:880px; margin:0 auto; padding:0 20px; }
+  header { display:flex; align-items:center; gap:14px; padding:22px 0; border-bottom:1px solid var(--line); }
+  .mark { width:34px; height:34px; border:1px solid var(--mute); display:grid; place-items:center;
+    color:var(--gold); font-size:10px; font-weight:700; }
+  header b { display:block; letter-spacing:.14em; font-size:13px; }
+  header span { color:var(--mute); font-size:11px; }
+  #who { margin-left:auto; display:none; align-items:center; gap:14px; font-size:13px; color:var(--mute); }
+  button { font:inherit; cursor:pointer; }
+  .link { background:none; border:0; color:var(--gold); padding:0; }
+  .link:focus-visible, button:focus-visible, input:focus-visible { outline:2px solid var(--gold); outline-offset:3px; }
+
+  /* sign in */
+  #login { max-width:610px; margin:0 auto; padding:56px 0; }
+  h1 { font-size:clamp(44px,9vw,68px); letter-spacing:-.04em; margin:0 0 8px; line-height:1; }
+  .sub { color:var(--mute); margin:0 0 32px; }
+  label { display:block; color:var(--mute); font-size:12px; margin-top:22px; }
+  input { width:100%; background:none; border:0; border-bottom:1px solid var(--mute); color:var(--ink);
+    font:inherit; font-size:17px; padding:10px 0; border-radius:0; }
+  input:focus { border-bottom-color:var(--gold); outline:none; }
+  .go { width:100%; margin-top:30px; padding:16px; background:var(--gold); color:#111; border:0;
+    font-weight:700; letter-spacing:.04em; }
+  .go[disabled] { opacity:.6; cursor:wait; }
+  .err { color:var(--bad); min-height:22px; margin-top:16px; font-size:14px; }
+
+  /* console */
+  #app { display:none; padding:32px 0 60px; }
+  h2 { font-size:28px; letter-spacing:-.02em; margin:0 0 4px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:14px; margin-top:24px; }
+  .tile { border:1px solid var(--line); padding:20px; text-align:left; background:none; color:var(--ink); }
+  .tile:hover { border-color:var(--gold); }
+  .tile b { display:block; margin-bottom:4px; }
+  .tile span { color:var(--mute); font-size:13px; }
+  #panel { margin-top:28px; border:1px solid var(--line); padding:22px; min-height:120px; color:var(--mute); }
+  #admin { display:none; margin-top:44px; border-top:1px solid var(--line); padding-top:26px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+  .row > div { flex:1 1 160px; }
+  .add { padding:11px 20px; background:none; border:1px solid var(--gold); color:var(--gold); }
+  ul { list-style:none; padding:0; margin:20px 0 0; }
+  li { display:flex; justify-content:space-between; padding:11px 0; border-bottom:1px solid var(--line); }
+  li button { background:none; border:0; color:var(--bad); }
+  @media (prefers-reduced-motion:no-preference) { .tile { transition:border-color .15s; } }
 </style>
 </head>
 <body>
-<div class="shell">
-<header>
-  <div class="mark">ATC</div>
-  <div class="brand">DREAMCORE<small>AIR TRAFFIC CONTROL</small></div>
-</header>
+<div class="wrap">
+  <header>
+    <div class="mark">ATC</div>
+    <div><b>DREAMCORE</b><span>Air traffic control</span></div>
+    <div id="who"><span id="whoName"></span><button class="link" id="out">Sign out</button></div>
+  </header>
 
-<main>
-  <section id="loginPanel">
-    <div class="kicker">AUTHORISED ATC ACCESS</div>
+  <!-- Sign in -->
+  <main id="login">
     <h1>Operations.</h1>
-    <p class="intro">Sign in with your ATC username. Passenger accounts do not have access to this console.</p>
-
-    <form id="loginForm" autocomplete="off">
-      <div class="field">
-        <label for="username">USERNAME</label>
-        <input id="username" name="atc-user" type="text" value=""
-          placeholder="Enter username" minlength="3" maxlength="20"
-          autocomplete="off" autocapitalize="none" spellcheck="false" required>
-      </div>
-      <div class="field">
-        <label for="password">PASSWORD</label>
-        <input id="password" name="atc-pass" type="password" value=""
-          placeholder="Enter password" autocomplete="new-password" required>
-      </div>
-      <button id="submitBtn" type="submit">SIGN IN →</button>
+    <p class="sub">Sign in with your ATC username. Passenger accounts can’t open this console.</p>
+    <form id="form" autocomplete="on">
+      <label for="u">Username</label>
+      <input id="u" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" required autofocus>
+      <label for="p">Password</label>
+      <input id="p" name="password" type="password" autocomplete="current-password" required>
+      <button class="go" id="btn" type="submit">Sign in</button>
+      <div class="err" id="err" role="alert"></div>
     </form>
-    <div id="message" role="status" aria-live="polite"></div>
-  </section>
+  </main>
 
-  <section id="dashboard">
-    <div class="kicker">ACCESS VERIFIED</div>
-    <h2>Welcome to Operations.</h2>
-    <p id="roleLine">Your ATC session is active.</p>
-    <p id="userLine"></p>
-    <button id="signout" type="button">SIGN OUT →</button>
-  </section>
-</main>
+  <!-- Console -->
+  <main id="app">
+    <h2>Operations console</h2>
+    <p class="sub" style="margin-bottom:0">Pick a tool to open it.</p>
+
+    <div class="grid" id="tiles">
+      <!-- Add your ATC features here: one button per feature -->
+      <button class="tile" data-feature="Flights"><b>Flights</b><span>Departures, arrivals and status</span></button>
+      <button class="tile" data-feature="Runways"><b>Runways</b><span>Assign and clear runways</span></button>
+      <button class="tile" data-feature="Alerts"><b>Alerts</b><span>Delays and weather notices</span></button>
+    </div>
+    <div id="panel">Choose a tool above.</div>
+
+    <!-- Only the admin account ever sees this -->
+    <section id="admin">
+      <h2 style="font-size:20px">ATC accounts</h2>
+      <p class="sub" style="margin:0 0 18px">Add or remove people who can sign in.</p>
+      <form class="row" id="addForm" autocomplete="off">
+        <div><label for="nu">New username</label><input id="nu" autocapitalize="none" required></div>
+        <div><label for="np">Password</label><input id="np" type="text" autocomplete="off" required></div>
+        <button class="add" type="submit">Add account</button>
+      </form>
+      <div class="err" id="aerr" role="alert"></div>
+      <ul id="users"></ul>
+    </section>
+  </main>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInWithCustomToken, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const SESSION = "atc_session", USERS = "atc_users";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCtt1k2EFdJXEwCLo2jZsGEf2742fHZrzk",
-  authDomain: "flyo-r3vxy.firebaseapp.com",
-  projectId: "flyo-r3vxy",
-  storageBucket: "flyo-r3vxy.firebasestorage.app",
-  messagingSenderId: "651442899138",
-  appId: "1:651442899138:web:699fef2737003088ee135b"
-};
+  // Default (admin) account. Only a salted hash is stored here, never the plain password.
+  const ADMIN = { user: "atc573", salt: "dreamcore-atc:atc573",
+    hash: "1c326ae3cbc6b98311918671404756291127593f87dc5e18b0337d797919e9ef" };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const functions = getFunctions(app, "asia-south1");
-const loginWithUsername = httpsCallable(functions, "loginAtcWithUsername");
+  const enc = new TextEncoder();
+  const hashPw = async (pw, salt) => {
+    if (!(window.crypto && crypto.subtle)) throw new Error("Open this page over https to sign in.");
+    const key = await crypto.subtle.importKey("raw", enc.encode(pw), "PBKDF2", false, ["deriveBits"]);
+    const bits = await crypto.subtle.deriveBits(
+      { name: "PBKDF2", salt: enc.encode(salt), iterations: 200000, hash: "SHA-256" }, key, 256);
+    return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  };
 
-const form = document.getElementById("loginForm");
-const usernameInput = document.getElementById("username");
-const passwordInput = document.getElementById("password");
-const submitBtn = document.getElementById("submitBtn");
-const message = document.getElementById("message");
-const loginPanel = document.getElementById("loginPanel");
-const dashboard = document.getElementById("dashboard");
+  const getUsers = () => { try { return JSON.parse(localStorage.getItem(USERS) || "{}"); } catch { return {}; } };
+  const setUsers = (u) => localStorage.setItem(USERS, JSON.stringify(u));
+  const nameOk = (n) => /^[a-z0-9_.-]{3,32}$/.test(n);
 
-function showError(text) {
-  message.textContent = text;
-}
-function friendlyError(error) {
-  const code = error?.code || "";
-  if (code.includes("unauthenticated")) return "Incorrect username or password.";
-  if (code.includes("permission-denied")) return "This account is not authorised for ATC access.";
-  if (code.includes("unavailable") || code.includes("not-found")) return "ATC authentication service is not deployed or is unavailable.";
-  return error?.message || "Unable to sign in. Please try again.";
-}
+  const show = (s) => {
+    $("login").style.display = s === "login" ? "block" : "none";
+    $("app").style.display   = s === "app" ? "block" : "none";
+    $("who").style.display   = s === "app" ? "flex" : "none";
+  };
 
-form.addEventListener("submit", async (event) => {
-  event.preventDefault();
-  const username = usernameInput.value.trim().toLowerCase();
-  const password = passwordInput.value;
-  if (!username || !password) return showError("Enter your username and password.");
+  const enter = (user, role) => {
+    $("whoName").textContent = role === "admin" ? "Admin" : user;
+    $("admin").style.display = role === "admin" ? "block" : "none";
+    show("app");
+    if (role === "admin") loadUsers();
+  };
 
-  submitBtn.disabled = true;
-  submitBtn.textContent = "VERIFYING…";
-  showError("");
+  const leave = () => {
+    localStorage.removeItem(SESSION);
+    $("p").value = "";
+    show("login");
+    $("u").focus();
+  };
 
-  try {
-    const result = await loginWithUsername({ username, password });
-    const token = result?.data?.token;
-    if (!token) throw new Error("Authentication server did not return a token.");
-    await signInWithCustomToken(auth, token);
-    passwordInput.value = "";
-  } catch (error) {
-    console.error("Dreamcore ATC login failed:", error);
-    showError(friendlyError(error));
-  } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = "SIGN IN →";
-  }
-});
-
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    dashboard.style.display = "none";
-    loginPanel.style.display = "block";
-    usernameInput.value = "";
-    passwordInput.value = "";
-    return;
-  }
-  try {
-    const token = await user.getIdTokenResult(true);
-    const role = token.claims.atcRole;
-    if (!["root", "controller"].includes(role)) {
-      await signOut(auth);
-      showError("This account is not authorised for ATC access.");
-      return;
+  // Sign in
+  $("form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("err").textContent = "";
+    $("btn").disabled = true; $("btn").textContent = "Signing in…";
+    try {
+      const name = $("u").value.trim().toLowerCase();
+      const pw = $("p").value;
+      let role = null;
+      if (name === ADMIN.user) {
+        if (await hashPw(pw, ADMIN.salt) === ADMIN.hash) role = "admin";
+      } else {
+        const rec = getUsers()[name];
+        if (rec && await hashPw(pw, rec.salt) === rec.hash) role = "atc";
+      }
+      if (!role) throw new Error("Wrong username or password.");
+      localStorage.setItem(SESSION, JSON.stringify({ user: name, role, exp: Date.now() + 12 * 3600 * 1000 }));
+      enter(name, role);
+    } catch (ex) {
+      $("err").textContent = ex.message;
+    } finally {
+      $("btn").disabled = false; $("btn").textContent = "Sign in";
+      $("p").value = "";
     }
-    loginPanel.style.display = "none";
-    dashboard.style.display = "block";
-    document.getElementById("roleLine").textContent =
-      role === "root" ? "Root controller access verified." : "Controller access verified.";
-    document.getElementById("userLine").textContent = "Your secure ATC session is active.";
-  } catch (error) {
-    await signOut(auth);
-    showError(friendlyError(error));
-  }
-});
+  });
 
-document.getElementById("signout").addEventListener("click", async () => {
-  await signOut(auth);
-  showError("");
-});
+  $("out").addEventListener("click", leave);
+
+  // Features
+  $("tiles").addEventListener("click", (e) => {
+    const t = e.target.closest(".tile");
+    if (!t) return;
+    $("panel").innerHTML = "<b style='color:var(--ink)'>" + t.dataset.feature + "</b><p>Connect this tool here.</p>";
+  });
+
+  // Account management (admin only)
+  const loadUsers = () => {
+    const names = Object.keys(getUsers()).sort();
+    $("users").innerHTML = names.length ? "" : "<li style='color:var(--mute)'>No accounts yet.</li>";
+    names.forEach((n) => {
+      const li = document.createElement("li");
+      const s = document.createElement("span"); s.textContent = n;
+      const b = document.createElement("button"); b.textContent = "Remove";
+      b.onclick = () => {
+        if (!confirm("Remove " + n + "?")) return;
+        const u = getUsers(); delete u[n]; setUsers(u); loadUsers();
+      };
+      li.append(s, b); $("users").append(li);
+    });
+  };
+
+  $("addForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    $("aerr").textContent = "";
+    try {
+      const n = $("nu").value.trim().toLowerCase(), p = $("np").value;
+      if (!nameOk(n)) throw new Error("Username: 3-32 letters, numbers, . _ -");
+      if (p.length < 6) throw new Error("Password needs at least 6 characters.");
+      if (n === ADMIN.user) throw new Error("That username is reserved.");
+      const salt = "atc:" + n + ":" + Math.random().toString(36).slice(2);
+      const u = getUsers(); u[n] = { salt, hash: await hashPw(p, salt) }; setUsers(u);
+      $("nu").value = ""; $("np").value = "";
+      loadUsers();
+    } catch (ex) { $("aerr").textContent = ex.message; }
+  });
+
+  // Stay signed in on this device for 12 hours
+  try {
+    const s = JSON.parse(localStorage.getItem(SESSION) || "null");
+    if (s && s.exp > Date.now()) return enter(s.user, s.role);
+  } catch {}
+  leave();
+})();
 </script>
 </body>
 </html>
