@@ -48,7 +48,7 @@ textarea{min-height:70px;resize:vertical}input:focus,textarea:focus{border-color
   <h1>Operations.</h1>
   <p>Sign in with your ATC username. Passenger accounts do not have access to this console.</p>
   <form id="loginForm">
-    <div class="field"><label for="username">USERNAME</label><input id="username" required minlength="3" maxlength="20" autocomplete="username" placeholder="ATC username"></div>
+    <div class="field"><label for="username">USERNAME</label><input id="username" value="atc573" required minlength="3" maxlength="20" autocomplete="username" placeholder="ATC username"></div>
     <div class="field"><label for="password">PASSWORD</label><input id="password" type="password" required minlength="6" autocomplete="current-password" placeholder="Password"></div>
     <button class="action" id="loginButton">SIGN IN →</button>
   </form>
@@ -127,10 +127,25 @@ const db=getFirestore(app);
 const provisionApp=initializeApp(firebaseConfig,"dreamcore-atc-provisioner");
 const provisionAuth=getAuth(provisionApp);
 const $=id=>document.getElementById(id);
+const ROOT_USERNAME="atc573";
+const AUTH_EMAIL_SUFFIX="@accounts.focusflight.app";
+const ROOT_AUTH_EMAIL=ROOT_USERNAME+AUTH_EMAIL_SUFFIX;
 const maintenanceRef=doc(db,"systemSettings","maintenance");
 let currentUser=null,role=null,unsubMaintenance=null,maintenance=false,busy=false;
 
-function emailFor(username){return username.trim().toLowerCase()+"@accounts.focusflight.app"}
+function emailFor(username){
+ const normalized=username.trim().toLowerCase();
+ return normalized===ROOT_USERNAME?ROOT_AUTH_EMAIL:normalized+AUTH_EMAIL_SUFFIX;
+}
+function explainAuthError(err){
+ const code=err?.code||"";
+ if(code==="auth/configuration-not-found") return "Firebase Authentication is not set up for this project yet. In Firebase Console → Authentication, choose Get started, then enable Email/Password under Sign-in method. Then reload this page.";
+ if(code==="auth/operation-not-allowed") return "Email/Password sign-in is disabled. Enable it in Firebase Console → Authentication → Sign-in method.";
+ if(code==="auth/unauthorized-domain") return "This website domain is not authorised. Add this Netlify domain in Firebase Console → Authentication → Settings → Authorised domains.";
+ if(code==="auth/invalid-api-key"||code==="auth/api-key-not-valid") return "The Firebase API key is invalid. Copy the Web App config again from Firebase Project settings.";
+ if(code==="auth/invalid-credential"||code==="auth/wrong-password"||code==="auth/user-not-found") return "Username or password is incorrect.";
+ return err?.message||"Sign-in failed. Check the Firebase project configuration.";
+}
 function errorText(id,message){$(id).textContent=message||""}
 function esc(value){return String(value).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 function setBusy(value){busy=value;["pauseButton","resumeButton","createButton","refreshButton"].forEach(id=>{if($(id))$(id).disabled=value})}
@@ -195,7 +210,7 @@ $("loginForm").addEventListener("submit",async e=>{
  if(!/^[a-z0-9][a-z0-9._-]{2,19}$/.test(username)){errorText("loginError","Use a 3–20 character username.");return}
  $("loginButton").disabled=true;
  try{await signInWithEmailAndPassword(auth,emailFor(username),password)}
- catch(err){errorText("loginError",err.code==="auth/invalid-credential"?"Username or password is incorrect.":err.message)}
+ catch(err){console.error("Dreamcore ATC sign-in:",err);errorText("loginError",explainAuthError(err))}
  finally{$("loginButton").disabled=false}
 });
 
@@ -211,7 +226,7 @@ onAuthStateChanged(auth,async user=>{
   catch(rootCheckError){
    if(rootCheckError.code!=="permission-denied")throw rootCheckError;
   }
-  if(rootSnap?.exists() && rootSnap.data().uid===user.uid){role="root"}
+  if(user.email?.toLowerCase()===ROOT_AUTH_EMAIL && rootSnap?.exists() && rootSnap.data().uid===user.uid){role="root"}
   else{
    const controllerSnap=await getDoc(doc(db,"atcAccounts",user.uid));
    if(controllerSnap.exists() && controllerSnap.data().role==="controller")role="controller";
@@ -231,7 +246,7 @@ $("createForm").addEventListener("submit",async e=>{
  if(role!=="root"||busy)return;
  const username=$("newUsername").value.trim().toLowerCase(),password=$("newPassword").value;
  if(!/^[a-z0-9][a-z0-9._-]{2,19}$/.test(username)){errorText("atcError","Use 3–20 characters, beginning with a letter or number.");return}
- if(username==="atc573"){errorText("atcError","That username is reserved for root operations.");return}
+ if(username===ROOT_USERNAME){errorText("atcError","That username is reserved for root operations.");return}
  if(password.length<8){errorText("atcError","Use at least 8 characters.");return}
  setBusy(true);errorText("atcError","");
  let createdUser=null;
